@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/SankhyaW-extensions.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/Mandrill/LibMandrill_lutung-0.0.7.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/Mandrill/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/commons-beanutils-1.7.0.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/commons-collections-3.1.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/commons-digester-1.7.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/groovy-all-1.5.3.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/itext-2.1.7.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/jasperreports-5.5.1.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/poi-3.9.jar"/>
+	<classpathentry kind="lib" path="/Users/adriano/git/referencias/JasperReport/servlet-api-2.4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
