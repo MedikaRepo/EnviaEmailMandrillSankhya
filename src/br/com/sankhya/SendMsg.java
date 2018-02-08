@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.codec.binary.Base64;
@@ -181,7 +182,7 @@ public class SendMsg implements AcaoRotinaJava
 					message.setHtml("<html><body style="+"\"font-famaly: arial; font-size:12px;"+"\">Prezado(s),<br/><br/>"+		             
 							"Segue proposta(s) de fornecimento do(s) material(ais) importado(s) e comercializado(s) pela Medika.<br/><br/>"+
 							"Caso deseje visualizar nossos catálogos de produtos clique neste link: <a href="+
-							"\"https://1drv.ms/f/s!AhNxsawi2mh1q1G2xpw7_AtidD3m\">Catálogos Medika</a>"+
+							"\"https://1drv.ms/f/s!AhNxsawi2mh1q2NecuGKDDH1HGhE\">Catálogos Medika</a>"+
 							"<br/><br/>"+
 							"Atenciosamente,"+
 							"<br/><br/>"+nomeVend+
@@ -199,7 +200,7 @@ public class SendMsg implements AcaoRotinaJava
 							"Segue proposta(s) de fornecimento do(s) material(ais) importado(s) e comercializado(s) pela Medika.<br/><br/>"+
 							"<br/>"+textoAd+"<br/><br/><br/>"
 							+ "Caso deseje visualizar nossos catálogos de produtos clique neste link: <a href="+
-							"\"https://1drv.ms/f/s!AhNxsawi2mh1q1G2xpw7_AtidD3m\">Catálogos Medika</a>"+
+							"\"https://1drv.ms/f/s!AhNxsawi2mh1q2NecuGKDDH1HGhE\">Catálogos Medika</a>"+
 							"<br/><br/>"+
 							"Atenciosamente,"+
 							"<br/><br/>"+nomeVend+
@@ -291,21 +292,34 @@ public class SendMsg implements AcaoRotinaJava
 				proxCodEmail=(Integer)ExecutaComandoNoBanco("SELECT MAX(CODEMAILMONITOR) FROM AD_EMAILMONITOR", "select");
 				tags.add(Integer.toString(proxCodEmail+1));
 
-				if(ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', '"+getDateTime()+"','"+ emailParc+"','"+emailVend+"')", "alter")!=null)
-				{
+				Calendar cal = Calendar.getInstance();
+		        
+		        int month = cal.get(Calendar.MONTH);
+		        int day = cal.get(Calendar.DAY_OF_MONTH);
+		        int year = cal.get(Calendar.YEAR);
+		        int hour = cal.get(Calendar.HOUR_OF_DAY);
+		        int minute = cal.get(Calendar.MINUTE);
+		        int second = cal.get(Calendar.SECOND);
+		        
+		        String dhenvio = day +"/"+month+1+"/"+year+" "+hour+":"+minute+":"+second;
+				
+				
+				if(ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', getdate(), '"+ emailParc+"','"+emailVend+"')", "alter")!=null)
+		        //if(ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', '"+getDateTime()+"','"+ emailParc+"','"+emailVend+"')", "alter")!=null)
+		        {
 					mensagem.append("Registros adicionados na tabela de log de envios.\n\n");
 				}
 
 				if ((emailCopia!="null")&&(emailCopia!=null))
 				{
 					proxCodEmail=(Integer)ExecutaComandoNoBanco("SELECT MAX(CODEMAILMONITOR) FROM AD_EMAILMONITOR", "select");
-					ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', '"+getDateTime()+"','"+ emailCopia+"','"+emailVend+"')", "alter");
+					ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', getdate(),'"+ emailCopia+"','"+emailVend+"')", "alter");
 					tags.add(Integer.toString(proxCodEmail+1));
 				}
 				if ((emailCopiaOculta!="null")&&(emailCopiaOculta!=null))
 				{
 					proxCodEmail=(Integer)ExecutaComandoNoBanco("SELECT MAX(CODEMAILMONITOR) FROM AD_EMAILMONITOR", "select");
-					ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', '"+getDateTime()+"','"+ emailCopiaOculta+"','"+emailVend+"')", "alter");
+					ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', getdate(),'"+ emailCopiaOculta+"','"+emailVend+"')", "alter");
 					tags.add(Integer.toString(proxCodEmail+1));
 				}
 				message.setTags(tags);
