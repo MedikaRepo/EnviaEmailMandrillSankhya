@@ -25,6 +25,8 @@ import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 
+//Atualizacao do catalogo - GAS - 18062018
+
 public class SendMsg implements AcaoRotinaJava 
 
 {
