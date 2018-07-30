@@ -14,5 +14,11 @@
 	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/LibMandrill_lutung-0.0.7.jar"/>
 	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/SankhyaW-extensions.jar"/>
 	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/ConexaoSQL_sqljdbc4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/skwextensiontool.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/httpcore-4.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/httpclient-4.2.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/gson-2.2.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/STI-004/git/referencias/Mandrill/commons-io-1.3.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

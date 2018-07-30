@@ -21,6 +21,7 @@ import com.microtripit.mandrillapp.lutung.view.MandrillMessage.MessageContent;
 import com.microtripit.mandrillapp.lutung.view.MandrillMessage.Recipient;
 import com.microtripit.mandrillapp.lutung.view.MandrillMessage.Recipient.Type;
 import com.microtripit.mandrillapp.lutung.view.MandrillMessageStatus;
+
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
@@ -68,8 +69,8 @@ public class SendMsg implements AcaoRotinaJava
 		}
 		catch(SQLException ex)
 		{
-			System.err.println("SQLException: " + ex.getMessage());
-			mensagem.append("Erro ao obter campo SQL("+ex.getMessage()+") \n");
+			//System.err.println("SQLException: " + ex.getMessage());
+			mensagem.append("Erro ao obter campo SQL("+ex.getMessage()+" - Comando:"+sql+") \n");
 			return null;
 		}
 	}	
@@ -80,9 +81,10 @@ public class SendMsg implements AcaoRotinaJava
 	public void doAction(ContextoAcao contexto) throws Exception 
 
 	{
-		String emailParc="", nomeVend="", emailVend="", textoAd="", emailCopia="", emailCopia2="", emailCopia3="", nomeParc="", emailLider="", nomeLider="";
+		String emailParc="", nomeVend="", emailVend="", textoAd="", emailCopia="", emailCopia2="", emailCopia3="", nomeParc="",
+			   emailLider="", nomeLider="";
 		BigDecimal nunota=BigDecimal.ZERO, tipoOp=BigDecimal.ZERO, codParc=BigDecimal.ZERO, 
-				codVend=BigDecimal.ZERO, codContato=BigDecimal.ZERO;
+				   codVend=BigDecimal.ZERO, codContato=BigDecimal.ZERO;
 		int ramalVend=0;
 		MandrillApi mandrillApi = new MandrillApi("5ZbB4mED1LcYaISfhPtquQ");
 
@@ -91,7 +93,7 @@ public class SendMsg implements AcaoRotinaJava
 		//Conecta no banco do Sankhya
 		ConnectMSSQLServer.dbConnect("jdbc:sqlserver://192.168.0.5:1433;DatabaseName=SANKHYA_PROD;", "adriano","Compiles23");
 
-		//recupera o numero da negociação
+		//recupera o numero da negociaÃ§Ã£o
 		try
 		{
 			Registro[] linha = contexto.getLinhas();
@@ -115,18 +117,18 @@ public class SendMsg implements AcaoRotinaJava
 		}
 
 
-		//Só executa nas TOPs permitidas   
+		//SÃ³ executa nas TOPs permitidas   
 		if ((tipoOp.intValue()==204)||(tipoOp.intValue()==205))
 		{	
 			//Recupera o ramal do vendedor
-			if(ExecutaComandoNoBanco("SELECT AD_TEXTOADICIONALEMAILPROP FROM TGFCAB WHERE NUNOTA="
+			if(ExecutaComandoNoBanco("SELECT AD_TEXTOADICIONALEMAILPROP FROM TGFCAB WHERE nunota="
 					+nunota.toString(), "select", "N")!=null)
 			{
 				textoAd=(String) ExecutaComandoNoBanco("SELECT AD_TEXTOADICIONALEMAILPROP FROM TGFCAB WHERE NUNOTA="
 						+nunota.toString(), "select", "N");
 			}
 
-			//Recupera o ramal do vendedor
+			//Recupera o nome do parceiro
 			if(ExecutaComandoNoBanco("SELECT NOMEPARC FROM TGFPAR WHERE CODPARC="
 					+codParc.toString(), "select", "N")!=null)
 			{
@@ -135,19 +137,39 @@ public class SendMsg implements AcaoRotinaJava
 			}
 
 			//Recupera o ramal do vendedor
-			if(ExecutaComandoNoBanco("SELECT AD_RAMAL FROM TSIUSU WHERE CODUSU="
-					+contexto.getUsuarioLogado().toString(), "select", "N")!=null)
+			if(ExecutaComandoNoBanco("SELECT AD_RAMAL FROM TGFVEN WHERE CODVEND="
+					+codVend.toString(), "select", "N")!=null)
 			{
-				ramalVend=(Integer) ExecutaComandoNoBanco("SELECT AD_RAMAL FROM TSIUSU WHERE CODUSU="
-						+contexto.getUsuarioLogado().toString(), "select", "N");
+				ramalVend=(Integer) ExecutaComandoNoBanco("SELECT AD_RAMAL FROM TGFVEN WHERE CODVEND="
+						+codVend.toString(), "select", "N");
 			}
 
+			int ultIdEmailMonitor = 0;
+			//Recupera ultimo ID da tabela de monitoramento de emails
+			if(ExecutaComandoNoBanco("SELECT MAX(CODEMAILMONITOR) FROM AD_EMAILMONITOR", "select", "N")!=null)
+			{
+				ultIdEmailMonitor=(Integer) ExecutaComandoNoBanco("SELECT MAX(CODEMAILMONITOR) FROM "
+						                                + "AD_EMAILMONITOR", "select", "N");
+			}
+			
 			//Recupera o email do vendedor
 			if(ExecutaComandoNoBanco("SELECT EMAIL FROM TSIUSU WHERE CODUSU="
 					+contexto.getUsuarioLogado().toString(), "select", "N")!=null)
 			{
 				emailVend=(String) ExecutaComandoNoBanco("SELECT EMAIL FROM TSIUSU WHERE CODUSU="
 						+contexto.getUsuarioLogado().toString(), "select", "N");
+			}
+
+			int codSMTPVend = 0;
+			
+			//Recupera o codigo do smtp do vendedor que estÃ¡ enviando
+			if(ExecutaComandoNoBanco("SELECT CODSMTP FROM TSISMTP WHERE REMETENTE LIKE"+
+					"(SELECT CAST('%' AS VARCHAR)+CAST(REPLACE(EMAIL, ' ', '') AS VARCHAR)+CAST('%' AS VARCHAR)"+
+					"FROM TSIUSU WHERE CODUSU="+contexto.getUsuarioLogado().toString()+")", "select", "N")!=null)
+			{
+				codSMTPVend=(Short) (ExecutaComandoNoBanco("SELECT CODSMTP FROM TSISMTP WHERE REMETENTE LIKE"+
+						"(SELECT CAST('%' AS VARCHAR)+CAST(REPLACE(EMAIL, ' ', '') AS VARCHAR)+CAST('%' AS VARCHAR)"+
+						"FROM TSIUSU WHERE CODUSU="+contexto.getUsuarioLogado().toString()+")", "select", "N"));
 			}
 
 			//Recupera o nome do vendedor
@@ -166,13 +188,13 @@ public class SendMsg implements AcaoRotinaJava
 			if(ExecutaComandoNoBanco("SELECT CTT.EMAIL FROM TGFCAB CAB"
 					+ " INNER JOIN TGFCTT CTT ON CTT.CODCONTATO=CAB.CODCONTATO"
 					+ " AND CTT.CODPARC=CAB.CODPARC"
-					+ " WHERE CAB.CODCONTATO="+codContato.toString()+" AND CAB.CODPARC="
-					+codParc.toString(), "select", "S")!=null)
+					+ " WHERE CAB.CODCONTATO="+1+" AND CAB.CODPARC="
+					+codParc.toString(), "select", "N")!=null)
 			{
 				emailParc=(String) ExecutaComandoNoBanco("SELECT CTT.EMAIL FROM TGFCAB CAB"
 						+ " INNER JOIN TGFCTT CTT ON CTT.CODCONTATO=CAB.CODCONTATO"
 						+ " AND CTT.CODPARC=CAB.CODPARC"
-						+ " WHERE CAB.CODCONTATO="+codContato.toString()+" AND CAB.CODPARC="
+						+ " WHERE CAB.CODCONTATO="+1+" AND CAB.CODPARC="
 						+codParc.toString(), "select", "N");
 				
 			}
@@ -200,9 +222,10 @@ public class SendMsg implements AcaoRotinaJava
 						"INNER JOIN TFPFUN FUN ON FUN.CODFUNC = USU2.CODFUNC AND FUN.CODEMP=3 "+
 						" WHERE  USU.DTLIMACESSO IS NULL AND FUN.DTDEM IS NULL AND USU.CODVEND="+codVend.toString(), "select", "N");
 			}
-			
-			contexto.setMensagemRetorno(mensagem.toString());
 
+			emailParc = emailParc.replaceAll(" ","");
+			emailVend = emailVend.replaceAll(" ","");
+            contexto.setMensagemRetorno(mensagem.toString());
 			try
 			{
 				// create your message
@@ -213,15 +236,15 @@ public class SendMsg implements AcaoRotinaJava
 				{
 					message.setHtml("<html><body style="+"\"font-famaly: arial; font-size:12px;"+"\">Prezado(s),<br/><br/>"+		             
 							"Segue proposta(s) de fornecimento do(s) material(ais) importado(s) e comercializado(s) pela Medika.<br/><br/>"+
-							"Caso deseje visualizar nossos cat�logos de produtos clique neste link: <a href="+
-							"\"https://www.medika.com.br/catalogo\">Cat�logos Medika</a>"+
+							"Caso deseje visualizar nossos catálogos de produtos clique neste link: <a href="+
+							"\"https://www.medika.com.br/catalogo\">Catálogos Medika</a>"+
 							"<br/><br/>"+
 							"Atenciosamente,"+
 							"<br/><br/>"+nomeVend+
 							" - Tel:(31) 3688-1901 Ramal:"+ramalVend+" - Equipe de Vendas"+
 							"<br><br><HR WIDTH=100% style="+"\"border:1px solid #191970;"+
 							"\"><img src="+"\"https://static.wixstatic.com/media/e2601a_be5e1a3b59244509bd59709b1d78733c~mv2.png/v1/fill/w_251,h_104,al_c,usm_0.66_1.00_0.01/e2601a_be5e1a3b59244509bd59709b1d78733c~mv2.png"+
-							"\"><br><br>Medika, qualidade em sa�de. - <a href="+"\"http://www.medika.com.br"+
+							"\"><br><br>Medika, qualidade em saúde. - <a href="+"\"http://www.medika.com.br"+
 							"\">www.medika.com.br</a><br>"+
 							"<HR WIDTH=100% style="+"\"border:1px solid #191970;"+"\">"+
 							"</body></html>");
@@ -231,15 +254,15 @@ public class SendMsg implements AcaoRotinaJava
 					message.setHtml("<html><body style="+"\"font-famaly: arial; font-size:12px;"+"\">Prezado(s),<br/><br/>"+		             
 							"Segue proposta(s) de fornecimento do(s) material(ais) importado(s) e comercializado(s) pela Medika.<br/><br/>"+
 							"<br/>"+textoAd+"<br/><br/><br/>"
-							+ "Caso deseje visualizar nossos cat�logos de produtos clique neste link: <a href="+
-							"\"https://www.medika.com.br/catalogo\">Cat�logos Medika</a>"+
+							+ "Caso deseje visualizar nossos catálogos de produtos clique neste link: <a href="+
+							"\"https://www.medika.com.br/catalogo\">Catálogos Medika</a>"+
 							"<br/><br/>"+
 							"Atenciosamente,"+
 							"<br/><br/>"+nomeVend+
 							" - Tel:(31) 3688-1901 Ramal:"+ramalVend+" - Equipe de Vendas"+
 							"<br><br><HR WIDTH=100% style="+"\"border:1px solid #191970;"+
 							"\"><img src="+"\"https://static.wixstatic.com/media/e2601a_be5e1a3b59244509bd59709b1d78733c~mv2.png/v1/fill/w_251,h_104,al_c,usm_0.66_1.00_0.01/e2601a_be5e1a3b59244509bd59709b1d78733c~mv2.png"+
-							"\"><br><br>Medika, qualidade em sa�de. - <a href="+"\"http://www.medika.com.br"+
+							"\"><br><br>Medika, qualidade em saúde. - <a href="+"\"http://www.medika.com.br"+
 							"\">www.medika.com.br</a><br>"+
 							"<HR WIDTH=100% style="+"\"border:1px solid #191970;"+"\">"+
 							"</body></html>");	
@@ -251,43 +274,56 @@ public class SendMsg implements AcaoRotinaJava
 				// add recipients
 				ArrayList<Recipient> recipients = new ArrayList<Recipient>();
 				Recipient recipient = new Recipient();
-				recipient.setEmail(emailParc);
-				recipient.setName(nomeParc);
+				recipient.setEmail("adriano.soares@medika.com.br");
+				recipient.setName("Adriano Teste");
 				recipient.setType(Type.TO);
 				recipients.add(recipient);
 
-				//EMAIL CÓPIA
-				Recipient recipient2 = new Recipient();
-				recipient2.setEmail(emailCopia);
-				recipient2.setType(Type.BCC);
-				recipients.add(recipient2);
+				if (emailCopia != "") {
+					//EMAIL CÃ“PIA
+					Recipient recipient2 = new Recipient();
+					recipient2.setEmail(emailCopia);
+					recipient2.setType(Type.BCC);
+					recipients.add(recipient2);
+				}
 
-				//EMAIL CÓPIA 2
-				Recipient recipient3 = new Recipient();
-				recipient3.setEmail(emailCopia2);
-				recipient3.setType(Type.BCC);
-				recipients.add(recipient3);
+				if (emailCopia2 != "") {
+					//EMAIL CÃ“PIA 2
+					Recipient recipient3 = new Recipient();
+					recipient3.setEmail(emailCopia2);
+					recipient3.setType(Type.BCC);
+					recipients.add(recipient3);
+				}
 				
-				//EMAIL CÓPIA 3
-				Recipient recipient4 = new Recipient();
-				recipient4.setEmail(emailCopia3);
-				recipient4.setType(Type.BCC);
-				recipients.add(recipient4);
+				if (emailCopia3 != "") {
+					//EMAIL CÃ“PIA 3
+					Recipient recipient4 = new Recipient();
+					recipient4.setEmail(emailCopia3);
+					recipient4.setType(Type.BCC);
+					recipients.add(recipient4);
+				}
 				
-				//EMAIL CÓPIA Email Vendedor 
-				Recipient recipient5 = new Recipient();
-				recipient5.setEmail(emailVend);
-				recipient5.setName(nomeVend);
-				recipient5.setType(Type.BCC);
-				recipients.add(recipient5);
+				if (emailVend != "") {
+					//EMAIL CÃ“PIA Email Vendedor 
+					Recipient recipient5 = new Recipient();
+					//recipient5.setEmail(emailVend);
+					recipient5.setEmail("gadrianosl@gmail.com");
+					recipient5.setName(nomeVend);
+					recipient5.setType(Type.BCC);
+					recipients.add(recipient5);
+				}
 				
-				//EMAIL CÓPIA Email Vendedor 
-				Recipient recipient6 = new Recipient();
-				recipient6.setEmail(emailLider);
-				recipient6.setName(nomeLider);
-				recipient6.setType(Type.BCC);
-				recipients.add(recipient6);
-
+				if (emailLider != "") {
+					//EMAIL CÃ“PIA Email Vendedor 
+					Recipient recipient6 = new Recipient();
+					//recipient6.setEmail(emailLider);
+					recipient6.setEmail("gadrianosl@hotmail.com");
+					recipient6.setName(nomeLider);
+					recipient6.setType(Type.BCC);
+					recipients.add(recipient6);
+				}
+			
+			
 				message.setTo(recipients);
 				message.setPreserveRecipients(true);
 				message.setTrackOpens(true);
@@ -299,11 +335,16 @@ public class SendMsg implements AcaoRotinaJava
 				attachment.setType("application/pdf");
 				attachment.setName("Proposta Comercial.pdf");
 
-				//Criação do anexo da proposta
+				//CriaÃ§Ã£o do anexo da proposta
+				try {
 				GeradorDeRelatorios.geraPdf("/home/mgeweb/modelos/relatorios/propostadevenda/PEDIDO_DE_VENDA1x.jrxml", nunota);  
+				}catch (Exception e) {
+					mensagem.append(e.getMessage());
+				}
 				//GeradorDeRelatorios.geraPdf("/users/adriano/relatorios/propvenda/PEDIDO_DE_VENDA1x.jrxml", nunota.add(new BigDecimal(122814)));
+				//GeradorDeRelatorios.geraPdf("C:\\Users\\STI-004\\propostadevenda\\PEDIDO_DE_VENDA1x.jrxml", nunota.add(new BigDecimal(200365)));
 
-				//File file = new File("/users/adriano/relatorios/propvenda/propvenda.pdf");
+				//File file = new File("C:\\Users\\STI-004\\propostadevenda\\propvenda.pdf");
 				File file = new File("/home/mgeweb/modelos/relatorios/propostadevenda/propvenda.pdf");
 
 				InputStream is = new FileInputStream(file);
@@ -324,7 +365,7 @@ public class SendMsg implements AcaoRotinaJava
 
 				if (offset < bytes.length) 
 				{
-					throw new IOException("Não foi possível completar a leitura do arquivo. " + file.getName());
+					throw new IOException("N�o foi poss�vel completar a leitura do arquivo. " + file.getName());
 				}
 
 				is.close();
@@ -334,7 +375,7 @@ public class SendMsg implements AcaoRotinaJava
 				listofAttachments.add(attachment);      
 
 				message.setAttachments(listofAttachments);
-
+				
 				int proxCodEmail;
 
 				ArrayList<String> tags = new ArrayList<String>();
@@ -352,8 +393,7 @@ public class SendMsg implements AcaoRotinaJava
 		        int second = cal.get(Calendar.SECOND);
 		        
 		        String dhenvio = day +"/"+month+1+"/"+year+" "+hour+":"+minute+":"+second;
-				
-				
+
 				if(ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', getdate(), '"+ emailParc+"','"+emailVend+"')", "alter", "N")!=null)
 		        //if(ExecutaComandoNoBanco("INSERT INTO AD_EMAILMONITOR (NUNOTA, STATUSENVIO, DHENVIO, DESTINATARIO, REMETENTE)VALUES("+nunota.toString()+",'ENVIADO', '"+getDateTime()+"','"+ emailParc+"','"+emailVend+"')", "alter")!=null)
 		        {
@@ -380,38 +420,50 @@ public class SendMsg implements AcaoRotinaJava
 					MandrillMessageStatus[] messageStatusReports = mandrillApi
 							.messages().send(message, false);
 
-					mensagem.append("Email enviado com sucesso! \n");
-
+					//StringBuffer mensagem = new StringBuffer();
+					mensagem.append("Email enviado com Mandrill! \n\n");
 					contexto.setMensagemRetorno(mensagem.toString());
 					//System.out.println(mensagem);
 
 				} catch (MandrillApiError e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					//System.out.println(e.getMessage());
 					//mensagem.setLength(0);
-					mensagem.append("Email do Contato:" + emailParc + "\n Email do Vendedor:" + emailVend + "\n Email do Líder:" + emailLider + "\n");
-					mensagem.append("Contato selecionado não tem email cadastrado ou o vendedor não tem email cadastrado. Favor verificar. "+e.getMessage()+"\n");
+					mensagem.append("Email do Contato:" + emailParc + "\n Email do Vendedor:" + emailVend + "\n Email do L�der:" + emailLider + "\n");
+					mensagem.append("Contato selecionado n�o tem email cadastrado ou o vendedor n�o tem email cadastrado. Favor verificar. "+e.getMessage()+"\n");
 					mensagem.append("Erro na API do MailChimp. "+e.getMessage()+"\n");
 					contexto.setMensagemRetorno(mensagem.toString());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-					mensagem.append("Erro de IO, ao tentar anexar pdf ao email do MailChimp. "+e.getMessage()+"\n");
+					//mensagem.append("Erro de IO, ao tentar anexar pdf ao email do MailChimp. "+e.getMessage()+"\n");
 					contexto.setMensagemRetorno(mensagem.toString());
 				}
 			}catch(Exception e)
 			{
-				mensagem.append("Erro ao enviar mensagem pelo MailChimp. "+e.getMessage()+"\n");
+				//mensagem.append("Erro ao enviar mensagem pelo MailChimp. "+e.getMessage()+"\n");
 				contexto.setMensagemRetorno(mensagem.toString());
 			}
+				
+			   contexto.setMensagemRetorno(mensagem.toString());
+				//System.out.println(mensagem);
+
+			//} catch (MandrillApiError e) {
+				// TODO Auto-generated catch block
+			//	e.printStackTrace();
+			//} catch (IOException e) {
+				// TODO Auto-generated catch block
+			//	e.printStackTrace();
+			//}
 		}
 		else
 		{
 			//StringBuffer mensagem = new StringBuffer();
-			mensagem.append("O envio da Proposta de Venda e Apresentação Comercial deve ser feito apenas nas TOPs 204 ou 205!");
+			mensagem.append("O envio da Proposta de Venda e Apresenta��o Comercial deve ser feito apenas na TOP 204!");
 
-			contexto.setMensagemRetorno(mensagem.toString());
-			//System.out.println("O envio da Proposta de Venda e Apresentação Comercial deve ser feito apenas na TOP 204");  
+			contexto.setMensagemRetorno(mensagem.toString());			
+			//System.out.println(mensagem.toString());  
 		}
 
 	}
