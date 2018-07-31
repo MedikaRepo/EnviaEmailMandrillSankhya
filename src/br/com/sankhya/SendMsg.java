@@ -188,13 +188,13 @@ public class SendMsg implements AcaoRotinaJava
 			if(ExecutaComandoNoBanco("SELECT CTT.EMAIL FROM TGFCAB CAB"
 					+ " INNER JOIN TGFCTT CTT ON CTT.CODCONTATO=CAB.CODCONTATO"
 					+ " AND CTT.CODPARC=CAB.CODPARC"
-					+ " WHERE CAB.CODCONTATO="+1+" AND CAB.CODPARC="
+					+ " WHERE CAB.CODCONTATO="+codContato.toString()+" AND CAB.CODPARC="
 					+codParc.toString(), "select", "N")!=null)
 			{
 				emailParc=(String) ExecutaComandoNoBanco("SELECT CTT.EMAIL FROM TGFCAB CAB"
 						+ " INNER JOIN TGFCTT CTT ON CTT.CODCONTATO=CAB.CODCONTATO"
 						+ " AND CTT.CODPARC=CAB.CODPARC"
-						+ " WHERE CAB.CODCONTATO="+1+" AND CAB.CODPARC="
+						+ " WHERE CAB.CODCONTATO="+codContato.toString()+" AND CAB.CODPARC="
 						+codParc.toString(), "select", "N");
 				
 			}
@@ -274,8 +274,8 @@ public class SendMsg implements AcaoRotinaJava
 				// add recipients
 				ArrayList<Recipient> recipients = new ArrayList<Recipient>();
 				Recipient recipient = new Recipient();
-				recipient.setEmail("adriano.soares@medika.com.br");
-				recipient.setName("Adriano Teste");
+				recipient.setEmail(emailParc);
+				recipient.setName(nomeParc);
 				recipient.setType(Type.TO);
 				recipients.add(recipient);
 
@@ -306,8 +306,8 @@ public class SendMsg implements AcaoRotinaJava
 				if (emailVend != "") {
 					//EMAIL CÃ“PIA Email Vendedor 
 					Recipient recipient5 = new Recipient();
-					//recipient5.setEmail(emailVend);
-					recipient5.setEmail("gadrianosl@gmail.com");
+					recipient5.setEmail(emailVend);
+					//recipient5.setEmail("gadrianosl@gmail.com");
 					recipient5.setName(nomeVend);
 					recipient5.setType(Type.BCC);
 					recipients.add(recipient5);
@@ -316,8 +316,8 @@ public class SendMsg implements AcaoRotinaJava
 				if (emailLider != "") {
 					//EMAIL CÃ“PIA Email Vendedor 
 					Recipient recipient6 = new Recipient();
-					//recipient6.setEmail(emailLider);
-					recipient6.setEmail("gadrianosl@hotmail.com");
+					recipient6.setEmail(emailLider);
+					//recipient6.setEmail("gadrianosl@hotmail.com");
 					recipient6.setName(nomeLider);
 					recipient6.setType(Type.BCC);
 					recipients.add(recipient6);
